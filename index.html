@@ -11,31 +11,19 @@ body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; overflow-x: hidd
 
 /* Page 1 - Candle */
 #introPage img { width: 250px; height: auto; }
-#introText { font-size: 28px; color: #e7008a; margin-top: 20px; }
+#introText { font-size: 28px; color: #e7008a; margin-top: 20px; cursor: pointer; }
 
 /* Page 2 - Alien */
 #alienPage { background: linear-gradient(to bottom, #000011, #220033); color: #fff; position: relative; }
 .alien { width: 120px; height: 160px; position: relative; animation: floatAlien 3s ease-in-out infinite alternate; }
-
 /* Alien Body */
-.alien .body {
-  width: 100%; height: 100%;
-  background: #00ffcc; border-radius: 50% / 50%;
-  position: relative;
-}
+.alien .body { width: 100%; height: 100%; background: #00ffcc; border-radius: 50% / 50%; position: relative; }
 /* Alien Eyes */
-.alien .eye {
-  width: 20px; height: 20px;
-  background: #000; border-radius: 50%;
-  position: absolute; top: 40px;
-}
+.alien .eye { width: 20px; height: 20px; background: #000; border-radius: 50%; position: absolute; top: 40px; }
 .alien .eye.left { left: 25px; }
 .alien .eye.right { right: 25px; }
 /* Alien Antennae */
-.alien .antenna {
-  width: 4px; height: 30px; background: #00ffcc;
-  position: absolute; top: -30px;
-}
+.alien .antenna { width: 4px; height: 30px; background: #00ffcc; position: absolute; top: -30px; }
 .alien .antenna.left { left: 20px; transform: rotate(-20deg); }
 .alien .antenna.right { right: 20px; transform: rotate(20deg); }
 
@@ -63,7 +51,7 @@ body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; overflow-x: hidd
 #countdown { font-size: 36px; font-weight:bold; color:#ffdd00; margin-bottom: 10px; }
 
 /* Confetti */
-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; cursor: default; }
 </style>
 </head>
 <body>
@@ -162,15 +150,24 @@ async function detectBlow() {
     checkNoise();
   } catch(e) {
     console.warn("Microphone not available, skipping to next page.", e);
-    setTimeout(startAlienPage, 4000);
   }
 }
 
 function startIntro() {
-  detectBlow();
-  // Play audio reliably after first click
   const audio = document.getElementById('bgAudio');
   document.body.addEventListener('click', ()=>{ audio.play().catch(()=>{}); }, { once:true });
+
+  detectBlow();
+
+  // Fallback to alien page after 2 seconds
+  setTimeout(() => {
+    const alienPage = document.getElementById('alienPage');
+    if (!alienPage.classList.contains('hidden')) return;
+    startAlienPage();
+  }, 2000);
+
+  // Click to skip immediately
+  document.getElementById('introPage').onclick = () => startAlienPage();
 }
 
 // ---------------- Page 2: Alien Arrival ----------------
@@ -183,13 +180,11 @@ function startAlienPage() {
   document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
   document.getElementById('alienText').innerText = data.birthdayMessage;
 
-  // Automatically move to photo page after 3 seconds
   const alienTimer = setTimeout(() => {
     alienPage.classList.add('hidden');
     startPhotoPage();
   }, 3000);
 
-  // Click anywhere to skip immediately
   alienPage.onclick = () => {
     clearTimeout(alienTimer);
     alienPage.classList.add('hidden');
@@ -200,19 +195,14 @@ function startAlienPage() {
 // ---------------- Page 3: Photo Slideshow ----------------
 let photoIndex = 0;
 let photoInterval;
-const photoEl = document.getElementById('photo');
 function startPhotoPage() {
-  const alienPage = document.getElementById('alienPage');
   const photoPage = document.getElementById('photoPage');
-  alienPage.classList.add('hidden');
+  const photoEl = document.getElementById('photo');
+  document.getElementById('alienPage').classList.add('hidden');
   photoPage.classList.remove('hidden');
 
-  const photos = data.photos;
-  if(!photos || photos.length === 0){
-    console.warn("No photos found in data.json");
-    startChatPage();
-    return;
-  }
+  const photos = data.photos || [];
+  if(photos.length === 0){ startChatPage(); return; }
 
   photoIndex = 0;
   photoEl.src = 'photos/' + photos[photoIndex];
@@ -229,23 +219,18 @@ function startPhotoPage() {
 
   clearInterval(photoInterval);
   photoInterval = setInterval(nextPhoto, 2000);
-
-  photoPage.onclick = ()=>{
-    nextPhoto();
-    clearInterval(photoInterval);
-  };
+  photoPage.onclick = () => { nextPhoto(); clearInterval(photoInterval); };
 }
 
 // ---------------- Page 4: Alien Chat ----------------
 function startChatPage() {
-  const photoPage = document.getElementById('photoPage');
   const chatPage = document.getElementById('chatPage');
-  photoPage.classList.add('hidden');
+  document.getElementById('photoPage').classList.add('hidden');
   chatPage.classList.remove('hidden');
 
   const chatContainer = document.getElementById('chatContainer');
   let i = 0;
-  const messages = data.alienMessages.concat([data.birthdayMessage]);
+  const messages = (data.alienMessages || []).concat([data.birthdayMessage || ""]);
 
   function showNextMsg() {
     if(i >= messages.length){ startFinalPage(); return; }
@@ -262,21 +247,19 @@ function startChatPage() {
 
 // ---------------- Page 5: Final Message ----------------
 function startFinalPage() {
-  const chatPage = document.getElementById('chatPage');
   const finalPage = document.getElementById('finalPage');
-  chatPage.classList.add('hidden');
+  document.getElementById('chatPage').classList.add('hidden');
   finalPage.classList.remove('hidden');
-  document.getElementById('finalMsg').innerText = data.finalMessage;
-  startConfetti();
 
+  document.getElementById('finalMsg').innerText = data.finalMessage || "Have a wonderful day!";
+  startConfetti();
   setTimeout(startCountdownPage, 5000);
 }
 
 // ---------------- Page 6: Countdown ----------------
 function startCountdownPage() {
-  const finalPage = document.getElementById('finalPage');
   const countdownPage = document.getElementById('countdownPage');
-  finalPage.classList.add('hidden');
+  document.getElementById('finalPage').classList.add('hidden');
   countdownPage.classList.remove('hidden');
 
   function getNextBirthday() {
