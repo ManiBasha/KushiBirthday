@@ -148,11 +148,12 @@ function startAlienPage() {
   document.getElementById('alienText').innerText = data.birthdayMessage;
 
   setTimeout(startPhotoPage, 3000);
-  alienPage.addEventListener('click', startPhotoPage);
+  alienPage.onclick = startPhotoPage;
 }
 
 // ---------------- Page 3: Photo Slideshow ----------------
 let photoIndex = 0;
+let photoInterval;
 const photoEl = document.getElementById('photo');
 
 function startPhotoPage() {
@@ -160,7 +161,7 @@ function startPhotoPage() {
   photoPage.classList.remove('hidden');
 
   const photos = data.photos;
-  if(!photos || photos.length === 0) { 
+  if(!photos || photos.length === 0){
     console.warn("No photos found in data.json");
     startChatPage();
     return;
@@ -169,17 +170,23 @@ function startPhotoPage() {
   photoIndex = 0;
   photoEl.src = 'photos/' + photos[photoIndex];
 
-  function nextPhoto() {
+  function nextPhoto(){
     photoIndex++;
-    if(photoIndex >= photos.length) { startChatPage(); return; }
+    if(photoIndex >= photos.length){
+      clearInterval(photoInterval);
+      startChatPage();
+      return;
+    }
     photoEl.src = 'photos/' + photos[photoIndex];
   }
 
-  const photoInterval = setInterval(nextPhoto, 2000);
-  photoPage.addEventListener('click', ()=>{
+  clearInterval(photoInterval);
+  photoInterval = setInterval(nextPhoto, 2000);
+
+  photoPage.onclick = ()=>{
     nextPhoto();
     clearInterval(photoInterval);
-  });
+  };
 }
 
 // ---------------- Page 4: Alien Chat ----------------
