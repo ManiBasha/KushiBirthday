@@ -6,5 +6,12 @@
     "Hello! I come from another galaxy to wish you a happy birthday!",
     "Hope you have an amazing day filled with laughter and fun!"
   ],
+  "name": "Kushi",
+  "birthday": {
+    "day": 04,
+    "month": 12,
+    "year": 2003
+  },
   "photos": ["pic1.jpg","pic2.jpg","pic3.jpg"]
 }
+
