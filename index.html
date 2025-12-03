@@ -52,14 +52,14 @@ canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
 
 <!-- Page 2: Alien Arrival -->
 <div id="alienPage" class="page hidden">
-  <img src="photos/alien.png" class="alien">
+  <img src="photos/alien.png" class="alien" alt="Alien">
   <div class="birthdayHeader" id="birthdayHeader"></div>
   <div class="alienText" id="alienText"></div>
 </div>
 
 <!-- Page 3: Photo Slideshow -->
 <div id="photoPage" class="page hidden">
-  <div class="photo-box"><img id="photo" src=""></div>
+  <div class="photo-box"><img id="photo" src="" alt="Birthday Photo"></div>
 </div>
 
 <!-- Page 4: Alien Chat -->
@@ -87,7 +87,7 @@ canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
 </audio>
 
 <script>
-// ---------------- Load data ----------------
+// ---------------- Load data.json ----------------
 let data;
 fetch('data/data.json')
   .then(res => res.json())
@@ -102,16 +102,16 @@ fetch('data/data.json')
     startIntro();
   });
 
-// ----------------- Compute Age -----------------
-function getAge(){
-  const birth = new Date(data.birthday.year, data.birthday.month-1, data.birthday.day);
+// ---------------- Compute Age ----------------
+function getAge() {
+  const birth = new Date(data.birthday.year, data.birthday.month - 1, data.birthday.day);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   if(today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
   return age;
 }
 
-// ----------------- Page 1: Candle Blow -----------------
+// ---------------- Page 1: Candle Blow ----------------
 async function detectBlow() {
   try {
     const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -140,8 +140,8 @@ function startIntro() {
   detectBlow();
 }
 
-// ----------------- Page 2: Alien Arrival -----------------
-function startAlienPage(){
+// ---------------- Page 2: Alien Arrival ----------------
+function startAlienPage() {
   introPage.classList.add('hidden');
   alienPage.classList.remove('hidden');
   document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
@@ -151,19 +151,28 @@ function startAlienPage(){
   alienPage.addEventListener('click', startPhotoPage);
 }
 
-// ----------------- Page 3: Photo Slideshow -----------------
-let photoIndex=0;
-function startPhotoPage(){
+// ---------------- Page 3: Photo Slideshow ----------------
+let photoIndex = 0;
+const photoEl = document.getElementById('photo');
+
+function startPhotoPage() {
   alienPage.classList.add('hidden');
   photoPage.classList.remove('hidden');
 
   const photos = data.photos;
-  photoEl.src = 'photos/'+photos[photoIndex];
+  if(!photos || photos.length === 0) { 
+    console.warn("No photos found in data.json");
+    startChatPage();
+    return;
+  }
 
-  function nextPhoto(){
+  photoIndex = 0;
+  photoEl.src = 'photos/' + photos[photoIndex];
+
+  function nextPhoto() {
     photoIndex++;
-    if(photoIndex>=photos.length){ startChatPage(); return; }
-    photoEl.src = 'photos/'+photos[photoIndex];
+    if(photoIndex >= photos.length) { startChatPage(); return; }
+    photoEl.src = 'photos/' + photos[photoIndex];
   }
 
   const photoInterval = setInterval(nextPhoto, 2000);
@@ -173,17 +182,17 @@ function startPhotoPage(){
   });
 }
 
-// ----------------- Page 4: Alien Chat -----------------
-function startChatPage(){
+// ---------------- Page 4: Alien Chat ----------------
+function startChatPage() {
   photoPage.classList.add('hidden');
   chatPage.classList.remove('hidden');
 
   const chatContainer = document.getElementById('chatContainer');
-  let i=0;
+  let i = 0;
   const messages = data.alienMessages.concat([data.birthdayMessage]);
 
-  function showNextMsg(){
-    if(i>=messages.length){ startFinalPage(); return; }
+  function showNextMsg() {
+    if(i >= messages.length){ startFinalPage(); return; }
     const msgDiv = document.createElement('div');
     msgDiv.className = 'chatMsg';
     msgDiv.innerText = messages[i];
@@ -195,8 +204,8 @@ function startChatPage(){
   showNextMsg();
 }
 
-// ----------------- Page 5: Final Message -----------------
-function startFinalPage(){
+// ---------------- Page 5: Final Message ----------------
+function startFinalPage() {
   chatPage.classList.add('hidden');
   finalPage.classList.remove('hidden');
   document.getElementById('finalMsg').innerText = data.finalMessage;
@@ -205,23 +214,23 @@ function startFinalPage(){
   setTimeout(startCountdownPage, 5000);
 }
 
-// ----------------- Page 6: Countdown -----------------
-function startCountdownPage(){
+// ---------------- Page 6: Countdown ----------------
+function startCountdownPage() {
   finalPage.classList.add('hidden');
   countdownPage.classList.remove('hidden');
 
-  function getNextBirthday(){
+  function getNextBirthday() {
     const today = new Date();
     let year = today.getFullYear();
-    let nextBD = new Date(Date.UTC(year, data.birthday.month-1, data.birthday.day, 18, 30, 0));
-    if(today >= nextBD) nextBD.setUTCFullYear(year+1);
+    let nextBD = new Date(Date.UTC(year, data.birthday.month - 1, data.birthday.day, 18, 30, 0));
+    if(today >= nextBD) nextBD.setUTCFullYear(year + 1);
     return nextBD;
   }
 
   const countdownEl = document.getElementById('countdown');
   const nextBD = getNextBirthday();
 
-  function updateCountdown(){
+  function updateCountdown() {
     const now = new Date();
     let diff = nextBD - now;
     const days = Math.floor(diff / (1000*60*60*24));
@@ -237,23 +246,23 @@ function startCountdownPage(){
   setInterval(updateCountdown, 1000);
 }
 
-// ----------------- Confetti -----------------
-function startConfetti(){
-  const canvas=document.getElementById('confettiCanvas');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  const ctx=canvas.getContext('2d');
-  const confetti=[];
+// ---------------- Confetti ----------------
+function startConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const confetti = [];
   for(let i=0;i<150;i++){
     confetti.push({
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height,
-      r:Math.random()*6+2,
-      d:Math.random()*150,
-      color:`hsl(${Math.random()*360},100%,50%)`
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*6+2,
+      d: Math.random()*150,
+      color: `hsl(${Math.random()*360},100%,50%)`
     });
   }
 
-  function draw(){
+  function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetti.forEach(c=>{
       ctx.fillStyle=c.color;
@@ -261,7 +270,7 @@ function startConfetti(){
       ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
       ctx.fill();
       c.y += 2;
-      if(c.y > canvas.height){ c.y=-10; c.x=Math.random()*canvas.width; }
+      if(c.y > canvas.height){ c.y = -10; c.x = Math.random()*canvas.width; }
     });
     requestAnimationFrame(draw);
   }
