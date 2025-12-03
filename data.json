@@ -1,0 +1,10 @@
+{
+  "introMessage": "Blow the candles to start 🎂",
+  "birthdayMessage": "Happy Birthday! Wishing you joy and laughter! 🎉",
+  "finalMessage": "Forever wishing you happiness and smiles 😊",
+  "alienMessages": [
+    "Hello! I come from another galaxy to wish you a happy birthday!",
+    "Hope you have an amazing day filled with laughter and fun!"
+  ],
+  "photos": ["pic1.jpg","pic2.jpg","pic3.jpg"]
+}
