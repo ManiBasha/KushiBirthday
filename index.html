@@ -50,12 +50,27 @@ canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
   <h1 id="introText">Loading...</h1>
 </div>
 
-<!-- Page 2: Alien Arrival -->
-<div id="alienPage" class="page hidden">
-  <img src="photos/alien.png" class="alien" alt="Alien">
-  <div class="birthdayHeader" id="birthdayHeader"></div>
-  <div class="alienText" id="alienText"></div>
-</div>
+// ---------------- Page 2: Alien Arrival ----------------
+function startAlienPage() {
+  introPage.classList.add('hidden');
+  alienPage.classList.remove('hidden');
+
+  document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
+  document.getElementById('alienText').innerText = data.birthdayMessage;
+
+  // Automatically move to photo page after 3 seconds
+  const alienTimer = setTimeout(() => {
+    alienPage.classList.add('hidden');
+    startPhotoPage();
+  }, 3000);
+
+  // Allow click to skip immediately
+  alienPage.onclick = () => {
+    clearTimeout(alienTimer); // stop automatic timeout
+    alienPage.classList.add('hidden');
+    startPhotoPage();
+  };
+}
 
 <!-- Page 3: Photo Slideshow -->
 <div id="photoPage" class="page hidden">
