@@ -1,267 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Happy Birthday — Mobile</title>
-  <meta name="description" content="Mobile-first GitHub Pages birthday wish page. First-time setup saved in localStorage." />
-  <style>
-    /* Mobile-first, single-file birthday page */
-    :root{
-      --bg:#fff0f8; --card:#ffffff; --primary:#ff4db8; --muted:#666; --glass: rgba(255,255,255,0.6);
-      --dark-bg:#0b0110; --dark-card:#120417; --dark-primary:#ff77c9; --dark-muted:#bbb;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;color:#111}
-    body{background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:18px}
-    .wrap{width:100%;max-width:420px}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday</title>
+<style>
+  body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; background: #fff0f7; overflow-x: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-    header.appbar{background:linear-gradient(120deg,var(--primary),#ff85d1);color:white;padding:18px;border-radius:14px;text-align:center;font-weight:700;box-shadow:0 6px 18px rgba(255,77,184,0.18)}
-    .photo{width:100%;border-radius:12px;margin-top:16px;display:block;object-fit:cover;aspect-ratio:3/4;box-shadow:0 8px 20px rgba(0,0,0,0.12)}
-    .card{background:var(--card);padding:16px;border-radius:14px;margin-top:14px;box-shadow:0 6px 20px rgba(17,17,17,0.06);text-align:center}
-    .name{font-size:20px;font-weight:700;margin:0}
-    .message{margin:8px 0 0 0;color:var(--muted)}
-    .age{margin-top:8px;font-weight:600}
-    .count{margin-top:12px;font-size:16px;font-weight:700}
+  /* Intro page with animated cake */
+  #introPage { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  #introPage img { width: 250px; height: auto; }
+  #introPage h1 { font-size: 28px; color: #e7008a; margin-top: 20px; opacity: 0; transition: opacity 2s ease; }
 
-    .controls{display:flex;gap:10px;justify-content:center;margin-top:14px}
-    .btn{padding:10px 14px;border-radius:12px;border:0;background:var(--primary);color:white;font-weight:700;text-decoration:none}
-    .ghost{background:transparent;border:1px solid rgba(0,0,0,0.08);color:var(--muted)}
-
-    /* small utilities */
-    .small{font-size:13px;color:var(--muted)}
-    .center{text-align:center}
-
-    /* modal form (first-time) */
-    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.45));backdrop-filter:blur(4px)}
-    .modal .box{width:100%;max-width:380px;background:white;border-radius:12px;padding:18px}
-    .modal label{display:block;font-weight:600;margin-top:8px;font-size:14px}
-    .modal input, .modal select{width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #eee}
-
-    /* confetti canvas */
-    canvas.confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
-
-    /* dark mode support */
-    .dark body{background:var(--dark-bg);color:var(--dark-muted)}
-
-    /* responsive tweaks for very small phones */
-    @media (max-width:340px){header.appbar{font-size:16px;padding:12px}.name{font-size:18px}}
-  </style>
+  /* Happy Birthday page */
+  #mainPage { display: none; width: 100vw; height: 100vh; padding: 20px; box-sizing: border-box; }
+  .container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .photo-box { width: 90%; height: 55vh; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 20px; }
+  .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+  .name { font-size: 32px; font-weight: bold; color: #e7008a; margin-top: 18px; text-align: center; }
+  .msg { margin-top: 8px; font-size: 18px; color: #444; text-align: center; line-height: 1.5; padding: 0 10px; }
+</style>
 </head>
 <body>
-  <div class="wrap" id="app">
-    <header class="appbar" id="headerText">🎉 Happy Birthday!</header>
+  <!-- Intro page with animated GIF cake -->
+  <div id="introPage">
+    <img src="photos/cake_animated.gif" alt="Cake Animation">
+    <h1 id="introText">Blow the candles to start 🎂</h1>
+  </div>
 
-    <!-- Photo loaded from repo: /photos/herphoto.jpg -->
-    <img id="mainPhoto" class="photo" src="photos/herphoto.jpg" alt="Birthday Photo" onerror="this.style.display='none'"/>
-
-    <div class="card">
-      <p class="name" id="displayName">Friend</p>
-      <p class="message" id="displayMsg">Wishing you a day filled with love and joy.</p>
-      <p class="age" id="displayAge"></p>
-      <p class="count" id="countdown">—</p>
-
-      <div class="controls">
-        <button class="btn" id="playBtn">Play Music</button>
-        <button class="btn ghost" id="resetBtn">Edit Info</button>
-      </div>
-
-      <p class="small center" style="margin-top:12px">Made with ❤️ — Open this on mobile for best view</p>
+  <!-- Main birthday page -->
+  <div id="mainPage">
+    <div class="container">
+      <div class="photo-box"><img id="photo" src="" /></div>
+      <div class="name" id="herName"></div>
+      <div class="msg" id="herMsg"></div>
     </div>
   </div>
 
-  <!-- Confetti canvas -->
-  <canvas class="confetti" id="confetti"></canvas>
-
-  <!-- Floating audio element (hidden controls) -->
-  <audio id="bgAudio" loop>
-    <!-- Put your music file in /audio/happy.mp3 on the repo (optional) -->
-    <source src="audio/happy.mp3" type="audio/mpeg">
+  <audio id="bgAudio" autoplay loop>
+    <source src="audio/happy_song.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Modal: first-run / edit -->
-  <div id="modal" class="modal" style="display:none">
-    <div class="box">
-      <h3 style="margin:0">Tell me about them</h3>
-      <p class="small" style="margin-top:6px">This asks once and saves to your device.</p>
+<script>
+// Intro animation and audio
+const introText = document.getElementById('introText');
+const introPage = document.getElementById('introPage');
+const mainPage = document.getElementById('mainPage');
+const audio = document.getElementById('bgAudio');
 
-      <label>Name</label>
-      <input id="inName" placeholder="Her name" />
+// Load her info and photos
+fetch('data/data.json')
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('herName').innerText = data.name;
+    document.getElementById('herMsg').innerText = data.message;
 
-      <label>Age (current)</label>
-      <input id="inAge" type="number" placeholder="e.g. 24" min="0" />
+    const photos = data.photos;
+    let index = 0;
+    const photoEl = document.getElementById('photo');
 
-      <label>Birthday (day)</label>
-      <input id="inDay" type="number" placeholder="1 - 31" min="1" max="31" />
-
-      <label>Birthday (month)</label>
-      <select id="inMonth">
-        <option value="1">January</option>
-        <option value="2">February</option>
-        <option value="3">March</option>
-        <option value="4">April</option>
-        <option value="5">May</option>
-        <option value="6">June</option>
-        <option value="7">July</option>
-        <option value="8">August</option>
-        <option value="9">September</option>
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
-      </select>
-
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button id="saveBtn" class="btn" style="flex:1">Save</button>
-        <button id="cancelBtn" class="btn ghost" style="flex:1">Cancel</button>
-      </div>
-
-      <p class="small" style="margin-top:10px">Photo should be placed in <code>/photos/herphoto.jpg</code>. Music (optional) in <code>/audio/happy.mp3</code>.</p>
-    </div>
-  </div>
-
-  <script>
-    // --- Utilities ---
-    const $ = id => document.getElementById(id);
-
-    function getBdayData(){
-      try{ return JSON.parse(localStorage.getItem('bdayData')) }catch(e){return null}
+    function showNextPhoto() {
+      photoEl.src = 'photos/' + photos[index];
+      index = (index + 1) % photos.length;
     }
-    function saveBdayData(d){ localStorage.setItem('bdayData', JSON.stringify(d)) }
-    function clearBdayData(){ localStorage.removeItem('bdayData') }
+    showNextPhoto();
+    setInterval(showNextPhoto, 3500);
+  });
 
-    // --- Countdown calculator ---
-    function nextBirthdayTimestamp(day, month){
-      const now = new Date();
-      const year = now.getFullYear();
-      let candidate = new Date(year, month - 1, day, 0,0,0,0);
-      if (candidate.getTime() <= now.getTime()) candidate = new Date(year + 1, month -1, day,0,0,0,0);
-      return candidate.getTime();
+// Blow detection for intro page
+async function detectBlow() {
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const ctx = new (window.AudioContext)();
+  const analyser = ctx.createAnalyser();
+  const micSource = ctx.createMediaStreamSource(mic);
+  micSource.connect(analyser);
+
+  const dataArr = new Uint8Array(analyser.frequencyBinCount);
+
+  function checkNoise() {
+    analyser.getByteFrequencyData(dataArr);
+    let volume = dataArr.reduce((a,b)=>a+b)/dataArr.length;
+    if(volume > 35) { // blowing threshold
+      startBirthdayPage();
+      return;
     }
+    requestAnimationFrame(checkNoise);
+  }
+  checkNoise();
+}
 
-    function daysBetween(ts){
-      const now = Date.now();
-      const diff = ts - now;
-      if (diff <= 0) return 0;
-      return Math.ceil(diff / (1000*60*60*24));
-    }
+function startBirthdayPage() {
+  introText.style.opacity = 0;
+  setTimeout(() => {
+    introPage.style.display = 'none';
+    mainPage.style.display = 'flex';
+  }, 2000);
+}
 
-    // --- UI updates ---
-    function applyData(d){
-      $('displayName').textContent = d.name || 'Friend';
-      $('displayMsg').textContent = d.msg || 'Wishing you a day filled with love and joy.';
-      $('displayAge').textContent = d.age ? `Age: ${d.age}` : '';
-      $('headerText').innerHTML = `🎉 Happy Birthday ${d.name || ''}! 🎉`;
-      // photo is loaded from repo
-
-      // start countdown loop
-      if (d.day && d.month){
-        updateCountdownLoop(d.day, d.month);
-      }
-    }
-
-    let countdownTimer = null;
-    function updateCountdownLoop(day, month){
-      if (countdownTimer) clearInterval(countdownTimer);
-      function tick(){
-        const ts = nextBirthdayTimestamp(day, month);
-        const days = daysBetween(ts);
-        $('countdown').textContent = (days === 0) ? 'Happy Birthday! 🎂' : `${days} day${days>1?'s':''} until next birthday`;
-        if (days === 0) triggerConfetti();
-      }
-      tick();
-      countdownTimer = setInterval(tick, 1000 * 60 * 1); // update every minute
-    }
-
-    // --- Modal flow ---
-    function openModal(prefill){
-      $('modal').style.display = 'flex';
-      if (prefill){ $('inName').value = prefill.name || ''; $('inAge').value = prefill.age || ''; $('inDay').value = prefill.day || ''; $('inMonth').value = prefill.month || 1; }
-    }
-    function closeModal(){ $('modal').style.display = 'none'; }
-
-    // --- Confetti simple implementation ---
-    const confettiCanvas = $('confetti');
-    const confettiCtx = confettiCanvas.getContext && confettiCanvas.getContext('2d');
-    let confettiPieces = [];
-    function resizeCanvas(){ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
-    window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
-    function createPiece(){
-      return { x: Math.random()*confettiCanvas.width, y: -10, w: 8+Math.random()*8, h: 6+Math.random()*8, vx: -1+Math.random()*2, vy: 1+Math.random()*3, rot: Math.random()*360, vr: -5+Math.random()*10, col: `hsl(${Math.random()*360} 80% 60%)` }
-    }
-    function triggerConfetti(){
-      if (!confettiCtx) return;
-      for(let i=0;i<120;i++) confettiPieces.push(createPiece());
-      requestAnimationFrame(renderConfetti);
-      setTimeout(()=>{ confettiPieces = []; confettiCtx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height); }, 8000);
-    }
-    function renderConfetti(){
-      confettiCtx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
-      confettiPieces.forEach((p, i)=>{
-        p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.rot += p.vr;
-        confettiCtx.save();
-        confettiCtx.translate(p.x, p.y); confettiCtx.rotate(p.rot*Math.PI/180);
-        confettiCtx.fillStyle = p.col; confettiCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        confettiCtx.restore();
-      });
-      if (confettiPieces.length) requestAnimationFrame(renderConfetti);
-    }
-
-    // --- Audio controls ---
-    const audio = $('bgAudio');
-    let audioAllowed = false;
-    async function tryPlayAudio(){
-      if (!audio) return;
-      try{ await audio.play(); audioAllowed = true; $('playBtn').textContent = 'Pause Music'; }catch(e){ audioAllowed = false; $('playBtn').textContent = 'Play Music'; }
-    }
-
-    // --- init ---
-    (function init(){
-      const data = getBdayData();
-      if (!data){
-        // first time: open modal
-        openModal({});
-      } else {
-        applyData(data);
-      }
-
-      // wire modal buttons
-      $('saveBtn').addEventListener('click', ()=>{
-        const name = $('inName').value.trim() || 'Friend';
-        const age = parseInt($('inAge').value,10) || '';
-        const day = parseInt($('inDay').value,10) || '';
-        const month = parseInt($('inMonth').value,10) || 1;
-        const d = { name, age, day, month, msg: `Wishing ${name} a beautiful day!` };
-        saveBdayData(d); applyData(d); closeModal();
-      });
-      $('cancelBtn').addEventListener('click', ()=>{ closeModal(); if (!getBdayData()) {/* if no data, keep modal open */ openModal({}); } });
-
-      // reset/edit
-      $('resetBtn').addEventListener('click', ()=>{ openModal(getBdayData()); });
-
-      // play/pause
-      $('playBtn').addEventListener('click', async ()=>{
-        if (!audio) return;
-        if (audio.paused){ try{ await audio.play(); $('playBtn').textContent = 'Pause Music'; }catch(e){ alert('Autoplay blocked — tap play to allow music.'); } }
-        else{ audio.pause(); $('playBtn').textContent = 'Play Music'; }
-      });
-
-      // try autoplay once (will usually be blocked on mobile until user gesture)
-      document.addEventListener('touchstart', tryPlayAudio, { once:true });
-      document.addEventListener('click', tryPlayAudio, { once:true });
-
-      // if today is birthday and data exists, show confetti
-      if (data && data.day && data.month){
-        const now = new Date();
-        if (now.getDate() === Number(data.day) && (now.getMonth()+1) === Number(data.month)) triggerConfetti();
-      }
-    })();
-
-    // expose debug on long press (clear data) — optional
-    let pressTimer = null;
-    document.addEventListener('touchstart', ()=>{ pressTimer = setTimeout(()=>{ if(confirm('Clear saved data?')){ clearBdayData(); location.reload(); } }, 2000); });
-    document.addEventListener('touchend', ()=>{ if(pressTimer) clearTimeout(pressTimer); });
-
-  </script>
+detectBlow();
+</script>
 </body>
 </html>
