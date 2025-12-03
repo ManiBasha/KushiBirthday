@@ -3,101 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Happy Birthday</title>
+<title>Birthday Story</title>
 <style>
-  body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; background: #fff0f7; overflow-x: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; background: #fff0f7; overflow-x: hidden; }
+  .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
+  .hidden { display: none; }
 
-  /* Intro page with animated cake */
-  #introPage { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  /* Page 1 — Candle Blow */
   #introPage img { width: 250px; height: auto; }
-  #introPage h1 { font-size: 28px; color: #e7008a; margin-top: 20px; opacity: 0; transition: opacity 2s ease; }
+  #introText { font-size: 28px; color: #e7008a; margin-top: 20px; }
 
-  /* Happy Birthday page */
-  #mainPage { display: none; width: 100vw; height: 100vh; padding: 20px; box-sizing: border-box; }
-  .container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-  .photo-box { width: 90%; height: 55vh; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 20px; }
+  /* Page 2 — Alien Arrival */
+  #alienPage { background: linear-gradient(to bottom, #000011, #220033); color: #fff; position: relative; }
+  .alien { width: 150px; animation: floatAlien 3s ease-in-out infinite alternate; }
+  @keyframes floatAlien { 0% { transform: translateY(0px);} 100% { transform: translateY(-20px); } }
+  .alienText { font-size: 22px; margin-top: 20px; }
+
+  /* Page 3 — Photo Slideshow */
+  #photoPage { background: #f0f8ff; flex-direction: column; }
+  .photo-box { width: 90%; height: 60vh; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 20px; }
   .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-  .name { font-size: 32px; font-weight: bold; color: #e7008a; margin-top: 18px; text-align: center; }
-  .msg { margin-top: 8px; font-size: 18px; color: #444; text-align: center; line-height: 1.5; padding: 0 10px; }
+
+  /* Page 4 — Alien Chat */
+  #chatPage { background: #111; color: #fff; overflow-y: auto; }
+  .chatMsg { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; margin: 8px 0; max-width: 80%; }
+  .chatUser { align-self: flex-end; background: rgba(255,255,255,0.3); }
+
+  /* Page 5 — Final Message */
+  #finalPage { background: linear-gradient(to top, #ffccff, #ff99cc); color: #fff; }
+  .finalMsg { font-size: 28px; font-weight: bold; }
+
+  /* Confetti canvas */
+  canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 </style>
 </head>
 <body>
-  <!-- Intro page with animated GIF cake -->
-  <div id="introPage">
-    <img src="photos/cake_animated.gif" alt="Cake Animation">
-    <h1 id="introText">Blow the candles to start 🎂</h1>
-  </div>
 
-  <!-- Main birthday page -->
-  <div id="mainPage">
-    <div class="container">
-      <div class="photo-box"><img id="photo" src="" /></div>
-      <div class="name" id="herName"></div>
-      <div class="msg" id="herMsg"></div>
-    </div>
-  </div>
+<!-- Page 1: Candle Blow -->
+<div id="introPage" class="page">
+  <img src="photos/cake_animated.gif" alt="Cake Animation">
+  <h1 id="introText">Loading...</h1>
+</div>
 
-  <audio id="bgAudio" autoplay loop>
-    <source src="audio/happy_song.mp3" type="audio/mpeg">
-  </audio>
+<!-- Page 2: Alien Arrival -->
+<div id="alienPage" class="page hidden">
+  <img src="photos/alien.png" class="alien">
+  <div class="alienText" id="alienText"></div>
+</div>
+
+<!-- Page 3: Photo Slideshow -->
+<div id="photoPage" class="page hidden">
+  <div class="photo-box"><img id="photo" src=""></div>
+</div>
+
+<!-- Page 4: Alien Chat -->
+<div id="chatPage" class="page hidden">
+  <div id="chatContainer" style="display:flex; flex-direction:column; width:90%; max-width:400px;"></div>
+</div>
+
+<!-- Page 5: Final Message -->
+<div id="finalPage" class="page hidden">
+  <div class="finalMsg" id="finalMsg"></div>
+</div>
+
+<!-- Confetti -->
+<canvas id="confettiCanvas"></canvas>
+
+<!-- Background music -->
+<audio id="bgAudio" autoplay loop>
+  <source src="audio/happy_song.mp3" type="audio/mpeg">
+</audio>
 
 <script>
-// Intro animation and audio
-const introText = document.getElementById('introText');
+// Load data.json
+let data;
+fetch('data/data.json').then(res=>res.json()).then(d=>{ 
+  data=d; 
+  document.getElementById('introText').innerText = data.introMessage; 
+  startIntro(); 
+});
+
+// Page references
 const introPage = document.getElementById('introPage');
-const mainPage = document.getElementById('mainPage');
-const audio = document.getElementById('bgAudio');
+const alienPage = document.getElementById('alienPage');
+const photoPage = document.getElementById('photoPage');
+const chatPage = document.getElementById('chatPage');
+const finalPage = document.getElementById('finalPage');
 
-// Load her info and photos
-fetch('data/data.json')
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('herName').innerText = data.name;
-    document.getElementById('herMsg').innerText = data.message;
-
-    const photos = data.photos;
-    let index = 0;
-    const photoEl = document.getElementById('photo');
-
-    function showNextPhoto() {
-      photoEl.src = 'photos/' + photos[index];
-      index = (index + 1) % photos.length;
-    }
-    showNextPhoto();
-    setInterval(showNextPhoto, 3500);
-  });
-
-// Blow detection for intro page
+// ---------------- Page 1: Candle Blow ----------------
 async function detectBlow() {
-  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const ctx = new (window.AudioContext)();
-  const analyser = ctx.createAnalyser();
-  const micSource = ctx.createMediaStreamSource(mic);
-  micSource.connect(analyser);
+  try {
+    const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new (window.AudioContext)();
+    const analyser = ctx.createAnalyser();
+    const micSource = ctx.createMediaStreamSource(mic);
+    micSource.connect(analyser);
+    const dataArr = new Uint8Array(analyser.frequencyBinCount);
 
-  const dataArr = new Uint8Array(analyser.frequencyBinCount);
-
-  function checkNoise() {
-    analyser.getByteFrequencyData(dataArr);
-    let volume = dataArr.reduce((a,b)=>a+b)/dataArr.length;
-    if(volume > 35) { // blowing threshold
-      startBirthdayPage();
-      return;
+    function checkNoise() {
+      analyser.getByteFrequencyData(dataArr);
+      let volume = dataArr.reduce((a,b)=>a+b)/dataArr.length;
+      if(volume > 35){ startAlienPage(); return; }
+      requestAnimationFrame(checkNoise);
     }
-    requestAnimationFrame(checkNoise);
+    checkNoise();
+  } catch(e){
+    console.log("Microphone not available, auto skip to next page");
+    setTimeout(startAlienPage, 4000);
   }
-  checkNoise();
+}
+function startIntro(){ detectBlow(); }
+
+// ---------------- Page 2: Alien Arrival ----------------
+function startAlienPage(){
+  introPage.classList.add('hidden');
+  alienPage.classList.remove('hidden');
+  let alienTextEl = document.getElementById('alienText');
+  alienTextEl.innerText = data.birthdayMessage;
+
+  // Move to photo page after 3 seconds or tap
+  setTimeout(startPhotoPage, 3000);
+  alienPage.addEventListener('click', startPhotoPage);
 }
 
-function startBirthdayPage() {
-  introText.style.opacity = 0;
-  setTimeout(() => {
-    introPage.style.display = 'none';
-    mainPage.style.display = 'flex';
-  }, 2000);
+// ---------------- Page 3: Photo Slideshow ----------------
+let photoIndex=0;
+function startPhotoPage(){
+  alienPage.classList.add('hidden');
+  photoPage.classList.remove('hidden');
+  const photos = data.photos;
+  const photoEl = document.getElementById('photo');
+  photoEl.src = 'photos/'+photos[photoIndex];
+
+  function nextPhoto(){
+    photoIndex++;
+    if(photoIndex>=photos.length){ startChatPage(); return; }
+    photoEl.src = 'photos/'+photos[photoIndex];
+  }
+
+  setInterval(nextPhoto, 2000);
+  photoPage.addEventListener('click', nextPhoto);
 }
 
-detectBlow();
+// ---------------- Page 4: Alien Chat ----------------
+function startChatPage(){
+  photoPage.classList.add('hidden');
+  chatPage.classList.remove('hidden');
+  const chatContainer = document.getElementById('chatContainer');
+  let i=0;
+  const messages = data.alienMessages.concat([data.birthdayMessage]);
+
+  function showNextMsg(){
+    if(i>=messages.length){ startFinalPage(); return; }
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chatMsg';
+    msgDiv.innerText = messages[i];
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    i++;
+    setTimeout(showNextMsg, 2000);
+  }
+  showNextMsg();
+}
+
+// ---------------- Page 5: Final Message ----------------
+function startFinalPage(){
+  chatPage.classList.add('hidden');
+  finalPage.classList.remove('hidden');
+  document.getElementById('finalMsg').innerText = data.finalMessage;
+  startConfetti();
+}
+
+// ---------------- Confetti ----------------
+function startConfetti(){
+  const canvas=document.getElementById('confettiCanvas');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const ctx=canvas.getContext('2d');
+  const confetti=[];
+  for(let i=0;i<150;i++){
+    confetti.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*6+2,d:Math.random()*150,color:`hsl(${Math.random()*360},100%,50%)`});
+  }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confetti.forEach(c=>{
+      ctx.fillStyle=c.color;
+      ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,2*Math.PI); ctx.fill();
+      c.y+=2; if(c.y>canvas.height){ c.y=-10; c.x=Math.random()*canvas.width;}
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
 </script>
 </body>
 </html>
