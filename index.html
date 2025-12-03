@@ -15,8 +15,32 @@ body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; overflow-x: hidd
 
 /* Page 2 - Alien */
 #alienPage { background: linear-gradient(to bottom, #000011, #220033); color: #fff; position: relative; }
-.alien { width: 150px; animation: floatAlien 3s ease-in-out infinite alternate; }
+.alien { width: 120px; height: 160px; position: relative; animation: floatAlien 3s ease-in-out infinite alternate; }
+
+/* Alien Body */
+.alien .body {
+  width: 100%; height: 100%;
+  background: #00ffcc; border-radius: 50% / 50%;
+  position: relative;
+}
+/* Alien Eyes */
+.alien .eye {
+  width: 20px; height: 20px;
+  background: #000; border-radius: 50%;
+  position: absolute; top: 40px;
+}
+.alien .eye.left { left: 25px; }
+.alien .eye.right { right: 25px; }
+/* Alien Antennae */
+.alien .antenna {
+  width: 4px; height: 30px; background: #00ffcc;
+  position: absolute; top: -30px;
+}
+.alien .antenna.left { left: 20px; transform: rotate(-20deg); }
+.alien .antenna.right { right: 20px; transform: rotate(20deg); }
+
 @keyframes floatAlien { 0% { transform: translateY(0px);} 100% { transform: translateY(-20px); } }
+
 .alienText { font-size: 22px; margin-top: 10px; }
 .birthdayHeader { font-size: 24px; margin-top: 5px; color:#ffdd00; }
 
@@ -50,27 +74,18 @@ canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
   <h1 id="introText">Loading...</h1>
 </div>
 
-// ---------------- Page 2: Alien Arrival ----------------
-function startAlienPage() {
-  introPage.classList.add('hidden');
-  alienPage.classList.remove('hidden');
-
-  document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
-  document.getElementById('alienText').innerText = data.birthdayMessage;
-
-  // Automatically move to photo page after 3 seconds
-  const alienTimer = setTimeout(() => {
-    alienPage.classList.add('hidden');
-    startPhotoPage();
-  }, 3000);
-
-  // Allow click to skip immediately
-  alienPage.onclick = () => {
-    clearTimeout(alienTimer); // stop automatic timeout
-    alienPage.classList.add('hidden');
-    startPhotoPage();
-  };
-}
+<!-- Page 2: Alien Arrival -->
+<div id="alienPage" class="page hidden">
+  <div class="alien">
+    <div class="body"></div>
+    <div class="eye left"></div>
+    <div class="eye right"></div>
+    <div class="antenna left"></div>
+    <div class="antenna right"></div>
+  </div>
+  <div class="birthdayHeader" id="birthdayHeader"></div>
+  <div class="alienText" id="alienText"></div>
+</div>
 
 <!-- Page 3: Photo Slideshow -->
 <div id="photoPage" class="page hidden">
@@ -97,7 +112,7 @@ function startAlienPage() {
 <canvas id="confettiCanvas"></canvas>
 
 <!-- Background music -->
-<audio id="bgAudio" autoplay loop>
+<audio id="bgAudio" loop>
   <source src="audio/happy_song.mp3" type="audio/mpeg">
 </audio>
 
@@ -153,25 +168,42 @@ async function detectBlow() {
 
 function startIntro() {
   detectBlow();
+  // Play audio reliably after first click
+  const audio = document.getElementById('bgAudio');
+  document.body.addEventListener('click', ()=>{ audio.play().catch(()=>{}); }, { once:true });
 }
 
 // ---------------- Page 2: Alien Arrival ----------------
 function startAlienPage() {
+  const introPage = document.getElementById('introPage');
+  const alienPage = document.getElementById('alienPage');
   introPage.classList.add('hidden');
   alienPage.classList.remove('hidden');
+
   document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
   document.getElementById('alienText').innerText = data.birthdayMessage;
 
-  setTimeout(startPhotoPage, 3000);
-  alienPage.onclick = startPhotoPage;
+  // Automatically move to photo page after 3 seconds
+  const alienTimer = setTimeout(() => {
+    alienPage.classList.add('hidden');
+    startPhotoPage();
+  }, 3000);
+
+  // Click anywhere to skip immediately
+  alienPage.onclick = () => {
+    clearTimeout(alienTimer);
+    alienPage.classList.add('hidden');
+    startPhotoPage();
+  };
 }
 
 // ---------------- Page 3: Photo Slideshow ----------------
 let photoIndex = 0;
 let photoInterval;
 const photoEl = document.getElementById('photo');
-
 function startPhotoPage() {
+  const alienPage = document.getElementById('alienPage');
+  const photoPage = document.getElementById('photoPage');
   alienPage.classList.add('hidden');
   photoPage.classList.remove('hidden');
 
@@ -206,6 +238,8 @@ function startPhotoPage() {
 
 // ---------------- Page 4: Alien Chat ----------------
 function startChatPage() {
+  const photoPage = document.getElementById('photoPage');
+  const chatPage = document.getElementById('chatPage');
   photoPage.classList.add('hidden');
   chatPage.classList.remove('hidden');
 
@@ -228,6 +262,8 @@ function startChatPage() {
 
 // ---------------- Page 5: Final Message ----------------
 function startFinalPage() {
+  const chatPage = document.getElementById('chatPage');
+  const finalPage = document.getElementById('finalPage');
   chatPage.classList.add('hidden');
   finalPage.classList.remove('hidden');
   document.getElementById('finalMsg').innerText = data.finalMessage;
@@ -238,6 +274,8 @@ function startFinalPage() {
 
 // ---------------- Page 6: Countdown ----------------
 function startCountdownPage() {
+  const finalPage = document.getElementById('finalPage');
+  const countdownPage = document.getElementById('countdownPage');
   finalPage.classList.add('hidden');
   countdownPage.classList.remove('hidden');
 
