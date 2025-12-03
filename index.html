@@ -5,36 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Birthday Story</title>
 <style>
-  body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; background: #fff0f7; overflow-x: hidden; }
-  .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
-  .hidden { display: none; }
+body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; overflow-x: hidden; }
+.page { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
+.hidden { display: none; }
 
-  /* Page 1 — Candle Blow */
-  #introPage img { width: 250px; height: auto; }
-  #introText { font-size: 28px; color: #e7008a; margin-top: 20px; }
+/* Page 1 - Candle */
+#introPage img { width: 250px; height: auto; }
+#introText { font-size: 28px; color: #e7008a; margin-top: 20px; }
 
-  /* Page 2 — Alien Arrival */
-  #alienPage { background: linear-gradient(to bottom, #000011, #220033); color: #fff; position: relative; }
-  .alien { width: 150px; animation: floatAlien 3s ease-in-out infinite alternate; }
-  @keyframes floatAlien { 0% { transform: translateY(0px);} 100% { transform: translateY(-20px); } }
-  .alienText { font-size: 22px; margin-top: 20px; }
+/* Page 2 - Alien */
+#alienPage { background: linear-gradient(to bottom, #000011, #220033); color: #fff; position: relative; }
+.alien { width: 150px; animation: floatAlien 3s ease-in-out infinite alternate; }
+@keyframes floatAlien { 0% { transform: translateY(0px);} 100% { transform: translateY(-20px); } }
+.alienText { font-size: 22px; margin-top: 10px; }
+.birthdayHeader { font-size: 24px; margin-top: 5px; color:#ffdd00; }
 
-  /* Page 3 — Photo Slideshow */
-  #photoPage { background: #f0f8ff; flex-direction: column; }
-  .photo-box { width: 90%; height: 60vh; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 20px; }
-  .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+/* Page 3 - Photo Slideshow */
+#photoPage { background: #f0f8ff; flex-direction: column; }
+.photo-box { width: 90%; height: 60vh; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 20px; }
+.photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-  /* Page 4 — Alien Chat */
-  #chatPage { background: #111; color: #fff; overflow-y: auto; }
-  .chatMsg { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; margin: 8px 0; max-width: 80%; }
-  .chatUser { align-self: flex-end; background: rgba(255,255,255,0.3); }
+/* Page 4 - Alien Chat */
+#chatPage { background: #111; color: #fff; overflow-y: auto; }
+.chatMsg { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; margin: 8px 0; max-width: 80%; }
+.chatUser { align-self: flex-end; background: rgba(255,255,255,0.3); }
 
-  /* Page 5 — Final Message */
-  #finalPage { background: linear-gradient(to top, #ffccff, #ff99cc); color: #fff; }
-  .finalMsg { font-size: 28px; font-weight: bold; }
+/* Page 5 - Final Message */
+#finalPage { background: linear-gradient(to top, #ffccff, #ff99cc); color: #fff; }
+.finalMsg { font-size: 28px; font-weight: bold; }
 
-  /* Confetti canvas */
-  canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+/* Page 6 - Countdown */
+#countdownPage { background: linear-gradient(to bottom, #ff99cc, #ff66aa); color:#fff; flex-direction: column; }
+#countdown { font-size: 36px; font-weight:bold; color:#ffdd00; margin-bottom: 10px; }
+
+/* Confetti */
+canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -48,6 +53,7 @@
 <!-- Page 2: Alien Arrival -->
 <div id="alienPage" class="page hidden">
   <img src="photos/alien.png" class="alien">
+  <div class="birthdayHeader" id="birthdayHeader"></div>
   <div class="alienText" id="alienText"></div>
 </div>
 
@@ -64,6 +70,12 @@
 <!-- Page 5: Final Message -->
 <div id="finalPage" class="page hidden">
   <div class="finalMsg" id="finalMsg"></div>
+</div>
+
+<!-- Page 6: Countdown -->
+<div id="countdownPage" class="page hidden">
+  <div id="countdown">00d 00h 00m 00s</div>
+  <div>Until your next birthday 🎉</div>
 </div>
 
 <!-- Confetti -->
@@ -83,12 +95,23 @@ fetch('data/data.json').then(res=>res.json()).then(d=>{
   startIntro(); 
 });
 
-// Page references
+// Pages
 const introPage = document.getElementById('introPage');
 const alienPage = document.getElementById('alienPage');
 const photoPage = document.getElementById('photoPage');
 const chatPage = document.getElementById('chatPage');
 const finalPage = document.getElementById('finalPage');
+const countdownPage = document.getElementById('countdownPage');
+const photoEl = document.getElementById('photo');
+
+// ----------------- Compute Age -----------------
+function getAge(){
+  const birth = new Date(data.birthday.year, data.birthday.month-1, data.birthday.day);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  if(today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
+  return age;
+}
 
 // ---------------- Page 1: Candle Blow ----------------
 async function detectBlow() {
@@ -118,10 +141,10 @@ function startIntro(){ detectBlow(); }
 function startAlienPage(){
   introPage.classList.add('hidden');
   alienPage.classList.remove('hidden');
-  let alienTextEl = document.getElementById('alienText');
-  alienTextEl.innerText = data.birthdayMessage;
+  document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
+  document.getElementById('alienText').innerText = data.birthdayMessage;
 
-  // Move to photo page after 3 seconds or tap
+  // Move to photo page after 3s or tap
   setTimeout(startPhotoPage, 3000);
   alienPage.addEventListener('click', startPhotoPage);
 }
@@ -132,7 +155,6 @@ function startPhotoPage(){
   alienPage.classList.add('hidden');
   photoPage.classList.remove('hidden');
   const photos = data.photos;
-  const photoEl = document.getElementById('photo');
   photoEl.src = 'photos/'+photos[photoIndex];
 
   function nextPhoto(){
@@ -172,6 +194,38 @@ function startFinalPage(){
   finalPage.classList.remove('hidden');
   document.getElementById('finalMsg').innerText = data.finalMessage;
   startConfetti();
+
+  setTimeout(startCountdownPage, 5000);
+}
+
+// ---------------- Page 6: Countdown ----------------
+function startCountdownPage(){
+  finalPage.classList.add('hidden');
+  countdownPage.classList.remove('hidden');
+
+  function getNextBirthday(){
+    const today = new Date();
+    let year = today.getFullYear();
+    const nextBD = new Date(Date.UTC(year, data.birthday.month-1, data.birthday.day, 18, 30, 0)); // 12AM IST = UTC+5:30
+    if(today >= nextBD) nextBD.setUTCFullYear(year+1);
+    return nextBD;
+  }
+
+  const countdownEl = document.getElementById('countdown');
+  const nextBD = getNextBirthday();
+  function updateCountdown(){
+    const now = new Date();
+    let diff = nextBD - now;
+    const days = Math.floor(diff / (1000*60*60*24));
+    diff %= (1000*60*60*24);
+    const hrs = Math.floor(diff / (1000*60*60));
+    diff %= (1000*60*60);
+    const mins = Math.floor(diff / (1000*60));
+    const secs = Math.floor((diff % (1000*60))/1000);
+    countdownEl.innerText = `${days}d ${hrs}h ${mins}m ${secs}s`;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
 }
 
 // ---------------- Confetti ----------------
