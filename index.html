@@ -87,22 +87,20 @@ canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
 </audio>
 
 <script>
-// Load data.json
+// ---------------- Load data ----------------
 let data;
-fetch('data/data.json').then(res=>res.json()).then(d=>{ 
-  data=d; 
-  document.getElementById('introText').innerText = data.introMessage; 
-  startIntro(); 
-});
-
-// Pages
-const introPage = document.getElementById('introPage');
-const alienPage = document.getElementById('alienPage');
-const photoPage = document.getElementById('photoPage');
-const chatPage = document.getElementById('chatPage');
-const finalPage = document.getElementById('finalPage');
-const countdownPage = document.getElementById('countdownPage');
-const photoEl = document.getElementById('photo');
+fetch('data/data.json')
+  .then(res => res.json())
+  .then(d => {
+    data = d;
+    document.getElementById('introText').innerText = data.introMessage || "Blow the candle to start!";
+    startIntro();
+  })
+  .catch(err => {
+    console.error("Failed to load data.json", err);
+    document.getElementById('introText').innerText = "Blow the candle to start!";
+    startIntro();
+  });
 
 // ----------------- Compute Age -----------------
 function getAge(){
@@ -113,47 +111,52 @@ function getAge(){
   return age;
 }
 
-// ---------------- Page 1: Candle Blow ----------------
+// ----------------- Page 1: Candle Blow -----------------
 async function detectBlow() {
   try {
-    const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const ctx = new (window.AudioContext)();
+    const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') await ctx.resume();
+
     const analyser = ctx.createAnalyser();
-    const micSource = ctx.createMediaStreamSource(mic);
+    const micSource = ctx.createMediaStreamSource(micStream);
     micSource.connect(analyser);
     const dataArr = new Uint8Array(analyser.frequencyBinCount);
 
     function checkNoise() {
       analyser.getByteFrequencyData(dataArr);
-      let volume = dataArr.reduce((a,b)=>a+b)/dataArr.length;
-      if(volume > 35){ startAlienPage(); return; }
-      requestAnimationFrame(checkNoise);
+      const volume = dataArr.reduce((a,b)=>a+b,0)/dataArr.length;
+      if(volume > 35){ startAlienPage(); }
+      else { requestAnimationFrame(checkNoise); }
     }
     checkNoise();
-  } catch(e){
-    console.log("Microphone not available, auto skip to next page");
+  } catch(e) {
+    console.warn("Microphone not available, skipping to next page.", e);
     setTimeout(startAlienPage, 4000);
   }
 }
-function startIntro(){ detectBlow(); }
 
-// ---------------- Page 2: Alien Arrival ----------------
+function startIntro() {
+  detectBlow();
+}
+
+// ----------------- Page 2: Alien Arrival -----------------
 function startAlienPage(){
   introPage.classList.add('hidden');
   alienPage.classList.remove('hidden');
   document.getElementById('birthdayHeader').innerText = `Happy Birthday ${data.name}, Age ${getAge()}!`;
   document.getElementById('alienText').innerText = data.birthdayMessage;
 
-  // Move to photo page after 3s or tap
   setTimeout(startPhotoPage, 3000);
   alienPage.addEventListener('click', startPhotoPage);
 }
 
-// ---------------- Page 3: Photo Slideshow ----------------
+// ----------------- Page 3: Photo Slideshow -----------------
 let photoIndex=0;
 function startPhotoPage(){
   alienPage.classList.add('hidden');
   photoPage.classList.remove('hidden');
+
   const photos = data.photos;
   photoEl.src = 'photos/'+photos[photoIndex];
 
@@ -163,14 +166,18 @@ function startPhotoPage(){
     photoEl.src = 'photos/'+photos[photoIndex];
   }
 
-  setInterval(nextPhoto, 2000);
-  photoPage.addEventListener('click', nextPhoto);
+  const photoInterval = setInterval(nextPhoto, 2000);
+  photoPage.addEventListener('click', ()=>{
+    nextPhoto();
+    clearInterval(photoInterval);
+  });
 }
 
-// ---------------- Page 4: Alien Chat ----------------
+// ----------------- Page 4: Alien Chat -----------------
 function startChatPage(){
   photoPage.classList.add('hidden');
   chatPage.classList.remove('hidden');
+
   const chatContainer = document.getElementById('chatContainer');
   let i=0;
   const messages = data.alienMessages.concat([data.birthdayMessage]);
@@ -188,7 +195,7 @@ function startChatPage(){
   showNextMsg();
 }
 
-// ---------------- Page 5: Final Message ----------------
+// ----------------- Page 5: Final Message -----------------
 function startFinalPage(){
   chatPage.classList.add('hidden');
   finalPage.classList.remove('hidden');
@@ -198,7 +205,7 @@ function startFinalPage(){
   setTimeout(startCountdownPage, 5000);
 }
 
-// ---------------- Page 6: Countdown ----------------
+// ----------------- Page 6: Countdown -----------------
 function startCountdownPage(){
   finalPage.classList.add('hidden');
   countdownPage.classList.remove('hidden');
@@ -206,13 +213,14 @@ function startCountdownPage(){
   function getNextBirthday(){
     const today = new Date();
     let year = today.getFullYear();
-    const nextBD = new Date(Date.UTC(year, data.birthday.month-1, data.birthday.day, 18, 30, 0)); // 12AM IST = UTC+5:30
+    let nextBD = new Date(Date.UTC(year, data.birthday.month-1, data.birthday.day, 18, 30, 0));
     if(today >= nextBD) nextBD.setUTCFullYear(year+1);
     return nextBD;
   }
 
   const countdownEl = document.getElementById('countdown');
   const nextBD = getNextBirthday();
+
   function updateCountdown(){
     const now = new Date();
     let diff = nextBD - now;
@@ -224,25 +232,36 @@ function startCountdownPage(){
     const secs = Math.floor((diff % (1000*60))/1000);
     countdownEl.innerText = `${days}d ${hrs}h ${mins}m ${secs}s`;
   }
+
   updateCountdown();
   setInterval(updateCountdown, 1000);
 }
 
-// ---------------- Confetti ----------------
+// ----------------- Confetti -----------------
 function startConfetti(){
   const canvas=document.getElementById('confettiCanvas');
   canvas.width=window.innerWidth; canvas.height=window.innerHeight;
   const ctx=canvas.getContext('2d');
   const confetti=[];
   for(let i=0;i<150;i++){
-    confetti.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*6+2,d:Math.random()*150,color:`hsl(${Math.random()*360},100%,50%)`});
+    confetti.push({
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      r:Math.random()*6+2,
+      d:Math.random()*150,
+      color:`hsl(${Math.random()*360},100%,50%)`
+    });
   }
+
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetti.forEach(c=>{
       ctx.fillStyle=c.color;
-      ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,2*Math.PI); ctx.fill();
-      c.y+=2; if(c.y>canvas.height){ c.y=-10; c.x=Math.random()*canvas.width;}
+      ctx.beginPath();
+      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
+      ctx.fill();
+      c.y += 2;
+      if(c.y > canvas.height){ c.y=-10; c.x=Math.random()*canvas.width; }
     });
     requestAnimationFrame(draw);
   }
